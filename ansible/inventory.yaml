@@ -1,0 +1,16 @@
+mbps:
+  hosts:
+    mbpserv:
+      ansible_host: 192.168.1.99
+    mbpserv2:
+      ansible_host: 192.168.1.100
+  vars:
+    ansible_user: kelly
+ec2s:
+  hosts:
+    control-plane:
+      ansible_host: 35.155.194.97
+    worker:
+      ansible_host: 34.210.82.178
+  vars:
+    ansible_user: ubuntu
