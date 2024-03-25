@@ -1,0 +1,6 @@
+# Ignored files by git
+*.vscode/*
+*terraform.tfvars
+**/.terraform/*
+*.tfstate
+*.tfstate.*
