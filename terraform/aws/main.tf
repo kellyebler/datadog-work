@@ -18,4 +18,6 @@ provider "aws" {
 }
 
 
-
+module "networking" {
+  source = "./networking"
+}
