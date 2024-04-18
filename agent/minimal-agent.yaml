@@ -1,0 +1,48 @@
+# =======================================================================================
+# Adapted from:
+#   https://github.com/DataDog/datadog-agent/blob/main/pkg/config/config_template.yaml
+# Configuration Options:
+#   - Agent Infrastructure Monitoring
+#   - Live Process Monitoring
+#   - Logs Collection
+# Installation Location:
+#   - (Linux) /etc/datadog-agent/datadog.yaml
+#   - (Windows) %ProgramData%\Datadog\conf.d\datadog.yaml
+#   - (others) https://docs.datadoghq.com/agent/guide/agent-configuration-files/?tab=agentv6v7#agent-configuration-directory
+# =======================================================================================
+
+#########################
+## Basic Configuration ##
+#########################
+api_key: <<API_KEY>>
+# proxy:
+#   https: http://<USERNAME>:<PASSWORD>@<PROXY_SERVER_FOR_HTTPS>:<PORT>
+#   http: http://<USERNAME>:<PASSWORD>@<PROXY_SERVER_FOR_HTTP>:<PORT>
+#   no_proxy:
+#     - <HOSTNAME-1>
+#     - <HOSTNAME-2>
+tags:
+  - team:<team_name>
+  - <TAG_KEY>:<TAG_VALUE>
+env: <environment name>
+
+##################################
+## Log collection Configuration ##
+##################################
+
+logs_enabled: true
+
+######################################
+## Process Collection Configuration ##
+######################################
+
+## @param process_config - custom object - optional
+## Enter specific configurations for your Process data collection.
+## Uncomment this parameter and the one below to enable them.
+## See https://docs.datadoghq.com/graphing/infrastructure/process/
+#
+process_config:
+  enabled: true
+  process_discovery:
+      enabled: true
+      interval: 4h
