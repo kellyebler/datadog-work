@@ -1,0 +1,15 @@
+init_config:
+instances:
+  - dbm: true
+    host: '<AWS_INSTANCE_ENDPOINT>'
+    port: 5432
+    username: datadog
+    password: '<PASSWORD>'
+    tags:
+      - "dbinstanceidentifier:<DB_INSTANCE_NAME>"
+    database_autodiscovery:
+      enabled: true
+    # Increase this if not all explain plans per normalized query are collected
+    # This is the default value but can be increased if needed
+    query_samples:
+      explained_queries_per_hour_per_query: 60
