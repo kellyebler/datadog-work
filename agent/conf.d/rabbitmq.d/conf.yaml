@@ -1,0 +1,11 @@
+## Basic conf.yaml file for RabbitMQ Datadog agent-based integration
+##
+## According to blog post at https://www.datadoghq.com/blog/monitoring-rabbitmq-performance-with-datadog/
+## this is what a basic config looks like
+
+init_config:
+
+instances:
+    -  rabbitmq_api_url: http://localhost:15672/api/
+       rabbitmq_user: datadog
+       rabbitmq_pass: some_password
