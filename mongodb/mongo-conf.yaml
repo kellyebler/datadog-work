@@ -1,0 +1,33 @@
+## All options defined here are available to all instances.
+#
+init_config:
+    # nothing needed here - service tag can be added, though.
+    # service: <SERVICE>
+instances:
+  - hosts:
+      - <HOST>:<PORT>
+    username: <USERNAME>
+    password: <PASSWORD>
+    
+    # The following was needed in a POC in order to make a successful connection.
+    # Check the connection string you normally use to connect to the database
+    # and try to map those flags to options in the mongo conf.yaml example file.
+    # for example, if you use a connection string like this:
+    # mongodb://<USERNAME>:<PASSWORD>@<HOST>:<PORT>/<DB_NAME>
+    # then you should set the db_name to <DB_NAME>
+    
+    tls: true
+    tls_allow_invalid_certificates: true
+    ## Overrides any `service` defined in the `init_config` section.
+    # service: <SERVICE>
+
+## NOTE: logs_enabled: true still needs to be set in the main datadog.yaml file
+## NOTE: path to logs on actual machine may be different, check your config and adjust accordingly
+## NOTE: ddagent user needs permission to read/execute these files. 
+##       make sure these permissions are set properly on host.
+
+logs:
+  - type: file
+    path: /var/log/mongodb/mongodb.log 
+    source: mongo
+    service: <SERVICE>
