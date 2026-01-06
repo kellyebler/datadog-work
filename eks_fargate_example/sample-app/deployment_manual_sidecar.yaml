@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-otel-app
+  namespace: sample-app
+  labels:
+    app: sample-otel-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-otel-app
+  template:
+    metadata:
+      labels:
+        app: sample-otel-app
+        tags.datadoghq.com/env: "production"
+        tags.datadoghq.com/service: "sample-otel-app"
+        tags.datadoghq.com/version: "1.0.0"
+    spec:
+      shareProcessNamespace: true
+      containers:
+      # Application container
+      - name: app
+        image: 770341584863.dkr.ecr.us-west-2.amazonaws.com/sample-otel-app:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://localhost:4317"
+        - name: DD_ENV
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/env']
+        - name: DD_SERVICE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/service']
+        - name: DD_VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/version']
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+
+      # Datadog Agent sidecar
+      - name: datadog-agent
+        image: datadog/agent:latest
+        env:
+        - name: DD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: api-key
+        - name: DD_SITE
+          value: "datadoghq.com"
+        - name: DD_EKS_FARGATE
+          value: "true"
+        - name: DD_CLUSTER_NAME
+          value: "kellyebler-eks-cluster"
+        - name: DD_KUBERNETES_KUBELET_NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT
+          value: "0.0.0.0:4317"
+        - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT
+          value: "0.0.0.0:4318"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-otel-app
+  namespace: sample-app
+  labels:
+    app: sample-otel-app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: sample-otel-app

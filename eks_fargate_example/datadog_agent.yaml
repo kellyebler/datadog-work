@@ -1,0 +1,41 @@
+apiVersion: datadoghq.com/v2alpha1
+kind: DatadogAgent
+metadata:
+  name: datadog
+spec:
+  global:
+    clusterName: kellyebler-eks-cluster
+    clusterAgentTokenSecret:
+      secretName: datadog-secret
+      keyName: token
+    credentials:
+      apiSecret:
+        secretName: datadog-secret
+        keyName: api-key
+  features:
+    orchestratorExplorer:
+      enabled: true
+      conf:
+        enabled: true
+      scrubbing:
+        containers: true
+    admissionController:
+      agentSidecarInjection:
+        enabled: true
+        provider: fargate
+        profiles:
+          - env:
+              - name: DD_EKS_FARGATE
+                value: "true"
+              - name: DD_CLUSTER_NAME
+                value: kellyebler-eks-cluster
+              - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT
+                value: "0.0.0.0:4317"
+              - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT
+                value: "0.0.0.0:4318"
+        registry: gcr.io/datadoghq
+    otlp:
+      receiver:
+        protocols:
+          grpc:
+            enabled: true

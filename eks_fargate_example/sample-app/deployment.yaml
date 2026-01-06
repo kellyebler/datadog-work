@@ -1,0 +1,152 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sample-otel-app
+  namespace: sample-app
+  labels:
+    app: sample-otel-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: sample-otel-app
+  template:
+    metadata:
+      labels:
+        app: sample-otel-app
+        tags.datadoghq.com/env: "production"
+        tags.datadoghq.com/service: "sample-otel-app"
+        tags.datadoghq.com/version: "1.0.0"
+      annotations:
+        # Note: Attempted admission controller injection but using manual sidecar for Fargate compatibility
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "false"
+    spec:
+      shareProcessNamespace: true
+      containers:
+      # Application container
+      - name: app
+        image: 770341584863.dkr.ecr.us-west-2.amazonaws.com/sample-otel-app:latest
+        ports:
+        - containerPort: 8080
+          name: http
+        env:
+        - name: OTEL_EXPORTER_OTLP_ENDPOINT
+          value: "http://localhost:4317"
+        - name: DD_ENV
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/env']
+        - name: DD_SERVICE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/service']
+        - name: DD_VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/version']
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8080
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: datadog
+          mountPath: /var/run/datadog
+
+      # Datadog Agent sidecar
+      - name: datadog-agent
+        image: datadog/agent:latest
+        env:
+        - name: DD_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: datadog-secret
+              key: api-key
+        - name: DD_SITE
+          value: "datadoghq.com"
+        - name: DD_EKS_FARGATE
+          value: "true"
+        - name: DD_CLUSTER_NAME
+          value: "kellyebler-eks-cluster"
+        - name: DD_KUBERNETES_KUBELET_NODENAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: spec.nodeName
+        - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_GRPC_ENDPOINT
+          value: "0.0.0.0:4317"
+        - name: DD_OTLP_CONFIG_RECEIVER_PROTOCOLS_HTTP_ENDPOINT
+          value: "0.0.0.0:4318"
+        # Unified Service Tagging for infrastructure correlation
+        - name: DD_ENV
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/env']
+        - name: DD_SERVICE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/service']
+        - name: DD_VERSION
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.labels['tags.datadoghq.com/version']
+        # Enable container tagging
+        - name: DD_TAGS
+          value: "env:production service:sample-otel-app version:1.0.0"
+        # Enable Kubernetes metadata collection
+        - name: DD_KUBERNETES_POD_LABELS_AS_TAGS
+          value: '{"app":"kube_app","tags.datadoghq.com/env":"env","tags.datadoghq.com/service":"service","tags.datadoghq.com/version":"version"}'
+        - name: DD_KUBERNETES_POD_ANNOTATIONS_AS_TAGS
+          value: '{}'
+        # Enable logs collection (optional but useful for correlation)
+        - name: DD_LOGS_ENABLED
+          value: "true"
+        - name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+          value: "true"
+        - name: DD_CONTAINER_EXCLUDE
+          value: "name:datadog-agent"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "400m"
+        volumeMounts:
+        - name: datadog
+          mountPath: /var/run/datadog
+
+      volumes:
+      - name: datadog
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sample-otel-app
+  namespace: sample-app
+  labels:
+    app: sample-otel-app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP
+    name: http
+  selector:
+    app: sample-otel-app
