@@ -1,0 +1,105 @@
+{
+  "family": "sample-app-fargate",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::ACCOUNT_ID:role/ecsTaskRole",
+  "containerDefinitions": [
+    {
+      "name": "sample-app",
+      "image": "ACCOUNT_ID.dkr.ecr.us-west-2.amazonaws.com/sample-app:latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8080,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "DD_SERVICE",
+          "value": "sample-app"
+        },
+        {
+          "name": "DD_ENV",
+          "value": "production"
+        },
+        {
+          "name": "DD_VERSION",
+          "value": "1.0.0"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sample-app-fargate",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "app"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    },
+    {
+      "name": "datadog-agent",
+      "image": "public.ecr.aws/datadog/agent:latest",
+      "essential": true,
+      "environment": [
+        {
+          "name": "DD_API_KEY",
+          "value": "DATADOG_API_KEY"
+        },
+        {
+          "name": "DD_SITE",
+          "value": "datadoghq.com"
+        },
+        {
+          "name": "ECS_FARGATE",
+          "value": "true"
+        },
+        {
+          "name": "DD_DOGSTATSD_NON_LOCAL_TRAFFIC",
+          "value": "true"
+        },
+        {
+          "name": "DD_LOGS_ENABLED",
+          "value": "true"
+        },
+        {
+          "name": "DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL",
+          "value": "true"
+        },
+        {
+          "name": "DD_CONTAINER_EXCLUDE",
+          "value": "name:datadog-agent"
+        },
+        {
+          "name": "DD_TAGS",
+          "value": "env:production service:sample-app version:1.0.0 team:platform region:us-west-2 cost-center:engineering"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/sample-app-fargate",
+          "awslogs-region": "us-west-2",
+          "awslogs-stream-prefix": "datadog-agent"
+        }
+      },
+      "healthCheck": {
+        "command": ["CMD-SHELL", "agent health"],
+        "interval": 30,
+        "timeout": 5,
+        "retries": 3,
+        "startPeriod": 60
+      }
+    }
+  ]
+}
