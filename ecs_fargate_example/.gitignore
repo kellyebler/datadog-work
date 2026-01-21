@@ -1,0 +1,26 @@
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/.terraform.tfstate.lock.info
+
+# Python
+sample-app/__pycache__/
+sample-app/*.pyc
+sample-app/*.pyo
+sample-app/.pytest_cache/
+sample-app/venv/
+sample-app/.venv/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

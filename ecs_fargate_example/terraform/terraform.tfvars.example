@@ -1,0 +1,17 @@
+# AWS Configuration
+aws_region = "us-west-2"
+
+# Environment
+environment = "production"
+
+# Datadog Configuration
+datadog_api_key = "your-datadog-api-key-here"
+datadog_site    = "datadoghq.com"  # Use "datadoghq.eu" for EU, "us3.datadoghq.com" for US3, etc.
+
+# ECS Configuration
+desired_count = 2
+
+# Custom Tags
+# These tags will be applied to all telemetry collected by the Datadog Agent
+team_tag        = "platform"
+cost_center_tag = "engineering"
