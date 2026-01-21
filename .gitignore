@@ -1,8 +1,50 @@
-# Ignored files by git
-*.vscode/*
-*terraform.tfvars
-**/.terraform/*
+# IDE and Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Terraform
+**/.terraform/
 *.tfstate
 *.tfstate.*
-*.terraform*
-**/.DS_Store
+*.tfvars
+*.tfvars.json
+.terraform.lock.hcl
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# Secrets and credentials
+*.env
+*.pem
+*.key
+secrets/
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+.venv/
+
+# Node
+node_modules/
+
+# Logs
+*.log
+logs/

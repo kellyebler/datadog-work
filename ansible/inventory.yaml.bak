@@ -1,8 +1,0 @@
-ec2s:
-  hosts:
-    control-plane:
-      ansible_host: 35.155.194.97
-    worker:
-      ansible_host: 34.210.82.178
-  vars:
-    ansible_user: ubuntu
